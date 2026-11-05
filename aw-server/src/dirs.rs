@@ -30,12 +30,26 @@ pub fn get_config_dir() -> Result<PathBuf, ()> {
 
 #[cfg(not(target_os = "android"))]
 pub fn get_data_dir() -> Result<PathBuf, ()> {
-    let dir = dirs::data_dir()
+    let dir = data_dir_platform()
         .ok_or(())?
         .join("activitywatch")
         .join("aw-server-rust");
     fs::create_dir_all(&dir).expect("Unable to create data dir");
     Ok(dir)
+}
+
+/// Returns the platform-appropriate data directory.
+///
+/// On Windows, uses `data_local_dir()` (AppData\Local) to match the path
+/// used by the old `appdirs` crate. On other platforms, uses `data_dir()`.
+#[cfg(target_os = "windows")]
+fn data_dir_platform() -> Option<PathBuf> {
+    dirs::data_local_dir()
+}
+
+#[cfg(not(target_os = "windows"))]
+fn data_dir_platform() -> Option<PathBuf> {
+    dirs::data_dir()
 }
 
 #[cfg(target_os = "android")]
